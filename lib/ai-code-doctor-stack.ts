@@ -58,7 +58,10 @@ export class AiCodeDoctorStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       environment: {
         TABLE_NAME: connectionsTable.tableName,
-        WEBSOCKET_API_ENDPOINT: 'https://' + webSocketApi.apiId + '.execute-api.' + cdk.Stack.of(this).region + '.amazonaws.com/prod'
+        WEBSOCKET_API_ENDPOINT: 'https://' + webSocketApi.apiId + '.execute-api.' + cdk.Stack.of(this).region + '.amazonaws.com/prod',
+        BEDROCK_MODEL_ID:
+          (this.node.tryGetContext('bedrockModelId') as string)
+            ?? 'anthropic.claude-3-5-sonnet-20240620-v1:0',
       },
     });
 
@@ -78,9 +81,12 @@ export class AiCodeDoctorStack extends cdk.Stack {
       actions: ['bedrock:InvokeModel'],
       resources: ['*'],
     }));
+    webSocketLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['bedrock:InvokeModelWithResponseStream'],
+      resources: ['*'],
+    }));  
 
     // 接続IDを管理するための許可をLambda関数に追加
-    // ルートやステージ設定の後で
     webSocketApi.grantManageConnections(webSocketLambda);
 
     // 6. WebSocketのデプロイメントとステージを定義
