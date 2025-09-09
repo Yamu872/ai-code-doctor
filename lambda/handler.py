@@ -36,13 +36,15 @@ def lambda_handler(event, context):
             language = body.get('language')
             question = body.get('question')
 
+            
+
             if not code or not language:
                 return {'statusCode': 400, 'body': 'Code and language are required.'}
             
             # WebSocketクライアントにメッセージを送信するためのAPI Gatewayクライアントを初期化
             api_gateway_management_api = boto3.client(
                 'apigatewaymanagementapi',
-                endpoint_url=f"https://{event['requestContext']['domainName']}/{event['requestContext']['stage']}"
+                endpoint_url=os.environ['WEBSOCKET_API_ENDPOINT']
             )
 
             # レビュー処理中であることをクライアントに通知

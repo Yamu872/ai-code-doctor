@@ -44,7 +44,12 @@ export class AiCodeDoctorStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    // 4. Lambda関数 (Backend) を定義
+    // 4. WebSocket API Gatewayを作成 (Lambdaより先に宣言)
+    const webSocketApi = new apigatewayv2.WebSocketApi(this, 'WebSocketApi', {
+      apiName: 'AICodeDoctorWebSocketApi',
+    });
+
+    // 5. Lambda関数 (Backend) を定義
     const webSocketLambda = new lambda.Function(this, 'WebSocketLambda', {
       runtime: lambda.Runtime.PYTHON_3_9,
       handler: 'handler.lambda_handler',
@@ -53,28 +58,30 @@ export class AiCodeDoctorStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       environment: {
         TABLE_NAME: connectionsTable.tableName,
+        WEBSOCKET_API_ENDPOINT: 'https://' + webSocketApi.apiId + '.execute-api.' + cdk.Stack.of(this).region + '.amazonaws.com/prod'
       },
     });
 
+    // Lambda統合を定義
+    const connectIntegration = new apigatewayv2integrations.WebSocketLambdaIntegration('ConnectIntegration', webSocketLambda);
+    const disconnectIntegration = new apigatewayv2integrations.WebSocketLambdaIntegration('DisconnectIntegration', webSocketLambda);
+    const defaultIntegration = new apigatewayv2integrations.WebSocketLambdaIntegration('DefaultIntegration', webSocketLambda);
+
+    // APIのルートと統合を関連付け
+    webSocketApi.addRoute('$connect', { integration: connectIntegration });
+    webSocketApi.addRoute('$disconnect', { integration: disconnectIntegration });
+    webSocketApi.addRoute('$default', { integration: defaultIntegration });
+
+    // Lambda関数にBedRock系の権限を付与
     connectionsTable.grantReadWriteData(webSocketLambda);
     webSocketLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ['bedrock:InvokeModel'],
       resources: ['*'],
     }));
 
-    // 5. WebSocket API Gatewayを作成
-    const webSocketApi = new apigatewayv2.WebSocketApi(this, 'WebSocketApi', {
-      apiName: 'AICodeDoctorWebSocketApi',
-      connectRouteOptions: {
-        integration: new apigatewayv2integrations.WebSocketLambdaIntegration('ConnectIntegration', webSocketLambda)
-      },
-      disconnectRouteOptions: {
-        integration: new apigatewayv2integrations.WebSocketLambdaIntegration('DisconnectIntegration', webSocketLambda)
-      },
-      defaultRouteOptions: {
-        integration: new apigatewayv2integrations.WebSocketLambdaIntegration('DefaultIntegration', webSocketLambda)
-      },
-    });
+    // 接続IDを管理するための許可をLambda関数に追加
+    // ルートやステージ設定の後で
+    webSocketApi.grantManageConnections(webSocketLambda);
 
     // 6. WebSocketのデプロイメントとステージを定義
     const webSocketStage = new apigatewayv2.WebSocketStage(this, 'WebSocketStage', {
