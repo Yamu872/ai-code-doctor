@@ -1,38 +1,231 @@
-.App {
-  text-align: center;
+/* ---------- Design tokens (modern slate) ---------- */
+:root{
+  --bg: hsl(222 47% 7%);
+  --surface: hsl(222 47% 10%);
+  --muted: hsl(217 33% 17%);
+  --accent: hsl(172 66% 45%);
+  --accent-weak: hsl(172 66% 32%);
+  --text: hsl(210 40% 96%);
+  --text-dim: hsl(215 20% 67%);
+  --border: hsl(217 19% 27%);
+  --radius: 14px;
+  --shadow: 0 10px 24px rgba(0,0,0,.25);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "JetBrains Mono", "Courier New", monospace;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+html, body, #root{
+  height: 100%;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+*{
+  box-sizing: border-box;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+body{
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans JP", "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* ---------- Layout ---------- */
+.app-container{
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+.app-header{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);                 /* ← フラット */
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 12px 10px;
+}
+
+.brand{
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 10px;
 }
 
-.App-link {
-  color: #61dafb;
+.brand .dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(16,185,129,.5);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.app-header h1{
+  font-size: 20px;
+  margin: 0 0 6px;
+}
+
+.description{
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.chat-window{
+  margin-top: 12px;
+}
+
+.message-list{
+  max-height: calc(100vh - 220px);
+  overflow: auto;
+  padding: 8px 2px;
+  scroll-behavior: smooth;
+}
+
+/* ---------- Bubbles ---------- */
+.message-container{
+  display: flex;
+  margin: 10px 0;
+}
+
+.message-container.user{
+  justify-content: flex-end;
+}
+
+.message-bubble{
+  background: var(--surface);
+  border: 1px solid rgba(148,163,184,.25);     /* 薄い境界線 */
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  max-width: 78%;
+  line-height: 1.6;
+}
+
+.message-container.user .message-bubble{
+  background: var(--muted);                    /* ユーザー側は少しだけ明るめ */
+  border-color: rgba(45,212,191,.25);          /* アクセント寄りの境界 */
+}
+
+.message-meta{
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 0 0 6px;
+}
+
+/* typing indicator */
+.typing-bubble{
+  display: flex;
+  align-items: center;
+}
+
+.typing{
+  display: inline-flex;
+  gap: 4px;
+}
+
+.typing span{
+  width: 6px;
+  height: 6px;
+  background: rgba(148,163,184,.7);
+  border-radius: 50%;
+  animation: typing 1.1s infinite;
+  opacity: .7;
+}
+
+.typing span:nth-child(2){
+  animation-delay: .14s;
+}
+
+.typing span:nth-child(3){
+  animation-delay: .28s;
+}
+
+@keyframes typing{
+  0%{ transform: translateY(0); opacity: .3; }
+  40%{ transform: translateY(-2px); opacity: 1; }
+  80%{ transform: translateY(0); opacity: .3; }
+  100%{ transform: translateY(0); opacity: .3; }
+}
+
+/* ---------- Input area (flat) ---------- */
+.input-area{
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);                  /* ← グラデを廃止 */
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+  padding: 12px 0 10px;
+  display: grid;
+  grid-template-columns: 220px 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.language-select,
+.code-input,
+button{
+  background: hsl(222 47% 13%);                /* ひと段明るい面 */
+  border: 1px solid rgba(148,163,184,.25);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.code-input{
+  min-height: 96px;
+  resize: vertical;
+  width: 100%;
+  font-family: var(--mono);
+}
+
+button{
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .02s ease;
+  background: hsl(222 47% 13%);
+}
+
+button:enabled:hover{
+  border-color: var(--accent-weak);
+  background: hsl(222 47% 15%);
+}
+
+button:enabled:active{
+  transform: translateY(1px);
+}
+
+/* ---------- Code block toolbar ---------- */
+.code-toolbar{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -6px -6px 8px;
+  padding: 6px 8px;
+  background: hsl(222 47% 12%);
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.25);
+}
+
+.code-lang{
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.copy-btn{
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: hsl(222 47% 14%);
+  border: 1px solid rgba(148,163,184,.25);
+  color: var(--text);
+}
+
+.copy-btn:hover{
+  background: hsl(222 47% 16%);
+}
+
+/* welcome */
+.welcome-message{
+  color: var(--text-dim);
+  text-align: center;
+  padding: 20px 0;
 }
