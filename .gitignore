@@ -1,8 +1,18 @@
-*.js
-!jest.config.js
-*.d.ts
-node_modules
+# ----- Node / OS -----
+node_modules/
+.DS_Store
+npm-debug.log*
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# ----- CDK build artifacts -----
+.cdk.staging/
+cdk.out/
+
+# TypeScript の出力(JS)は bin / lib だけ無視（フロントの JS は無視しない）
+bin/**/*.js
+lib/**/*.js
+**/*.js.map
+**/*.d.ts
+**/*.d.ts.map
+
+# ----- Frontend build -----
+frontend/build/
