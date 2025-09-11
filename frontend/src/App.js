@@ -3,8 +3,6 @@ import './App.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import CodeBlock from './CodeBlock';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const WEBSOCKET_API_URL = 'wss://7dslat2lz5.execute-api.ap-northeast-1.amazonaws.com/prod'; // WebSocket APIのURLを設定
 const MAX_RETRY_DELAY_MS = 10000;
