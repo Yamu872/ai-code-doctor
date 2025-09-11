@@ -49,5 +49,5 @@ jobs:
           MODEL_ID="${BEDROCK_MODEL_ID:-$DEFAULT_MODEL_ID}"
           echo "Using model: $MODEL_ID"
           aws --version
-          cdk --version
+          npx aws-cdk --version
           npx aws-cdk deploy --require-approval never -c bedrockModelId="$MODEL_ID" -q
