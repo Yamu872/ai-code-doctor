@@ -1,0 +1,53 @@
+name: Deploy
+
+on:
+  workflow_dispatch:   # まずは手動ボタンで実行して検証
+    inputs:
+      modelId:
+        description: "Bedrock model id (optional)"
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+  BEDROCK_MODEL_ID: ${{ inputs.modelId || vars.BEDROCK_MODEL_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+
+      - name: Install root deps (CDK etc.)
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: CDK deploy
+        env:
+          DEFAULT_MODEL_ID: anthropic.claude-3-5-sonnet-20240620-v1:0
+        run: |
+          MODEL_ID="${BEDROCK_MODEL_ID:-$DEFAULT_MODEL_ID}"
+          echo "Using model: $MODEL_ID"
+          aws --version
+          cdk --version
+          npx aws-cdk deploy --require-approval never -c bedrockModelId="$MODEL_ID" -q
