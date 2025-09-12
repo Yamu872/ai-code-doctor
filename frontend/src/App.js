@@ -20,6 +20,7 @@ function App() {
   const reconnectTimerRef = useRef(null);
   const socketRef = useRef(null);
   const listRef = useRef(null);
+  const connectRef = useRef(() => {});
 
   const setupHandlers = useCallback((socket) => {
     socket.onopen = () => {
@@ -85,7 +86,7 @@ function App() {
       const delay = Math.min(1000 * (2 ** retryCountRef.current), MAX_RETRY_DELAY_MS); // 指数バックオフ
       retryCountRef.current += 1;
       reconnectTimerRef.current = setTimeout(() => {
-        connect(); // 再接続
+        connectRef.current();// 再接続
       }, delay);
     };
 
@@ -102,9 +103,13 @@ function App() {
     setupHandlers(socket);
   }, [setupHandlers]);
 
+  useEffect(() => {           // connect の最新版を Ref に同期
+  connectRef.current = connect;
+}, [connect]);
+
   useEffect(() => {
     // 初回接続
-    connect();
+    connectRef.current(); 
 
     // クリーンアップ：再接続停止＆タイマー解除＆ソケットクローズ
     return () => {
